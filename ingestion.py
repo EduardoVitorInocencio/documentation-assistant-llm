@@ -11,20 +11,20 @@ from langchain_openai import OpenAIEmbeddings
 embeddings = OpenAIEmbeddings(model="text-embedding-3-small")
 
 def ingest_docs():
-    loader = ReadTheDocsLoader("api.python.langchain.com/en/latest")
+    loader = ReadTheDocsLoader("api.python.langchain.com/en/latest", encoding='utf-8')
 
     raw_documents = loader.load()
     print(f'loaded {len(raw_documents)} documents')
 
     text_splitter = RecursiveCharacterTextSplitter(chunk_size=600, chunk_overlap=50)
-    documents = text_splitter.split(raw_documents)
+    documents = text_splitter.split_documents(raw_documents)
     for doc in documents:
         new_url = doc.metadata['source']
         new_url = new_url.replace("api.python.langchain.com", "https://api.python.langchain.com/en/latest")
         doc.metadata.update({'source': new_url})
 
     print(f'Going to embed {len(documents)} documents to Pinecone')
-    PineconeVectorStore.from_documents(documents, embeddings=embeddings, index_name="langchain-docs-index")
+    PineconeVectorStore.from_documents(documents, embedding=embeddings, index_name="langchain-doc-index")
 
 print("******* Loading to vectorstore done ****")
 
