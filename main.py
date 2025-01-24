@@ -1,6 +1,3 @@
-from venv import create
-
-from numpy import source
 from backend.core import run_llm
 from streamlit_chat import message
 import streamlit as st
@@ -15,6 +12,9 @@ if "user_prompt_history" not in st.session_state:
 
 if "chat_answer_history" not in st.session_state:
     st.session_state['chat_answer_history'] = []
+
+if "chat_history" not in st.session_state:
+    st.session_state["chat_history"] = []
 
 def create_sources_string(source_urls: set[str]) -> str:
     if not source_urls:
@@ -31,7 +31,10 @@ def create_sources_string(source_urls: set[str]) -> str:
 
 if prompt:
     with st.spinner("Gerating response..."):
-        generate_response = run_llm(query=prompt)
+        generate_response = run_llm(
+            query=prompt,
+            chat_history=st.session_state["chat_history"]
+            )
         sources = set([doc.metadata["source"] for doc in generate_response["source_documents"]])
         st.text(generate_response["result"])
 
@@ -39,6 +42,9 @@ if prompt:
 
         st.session_state['user_prompt_history'].append(prompt)
         st.session_state['chat_answer_history'].append(formatted_response)
+        st.session_state["chat_history"].append(("human", prompt))
+        st.session_state["chat_history"].append(("ai", generate_response["result"]))
+
 
 if st.session_state['chat_answer_history']:
     for generated_response, user_query in zip(st.session_state['chat_answer_history'], st.session_state['user_prompt_history']):
